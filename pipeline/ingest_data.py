@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 import ssl
 import certifi
 import urllib.request
+import click
 
 # SSL context using certifi
 ssl_context = ssl.create_default_context(cafile=certifi.where())
@@ -80,21 +81,21 @@ def ingest_data(
     print(f'done ingesting to {target_table}')
 
 
-def main():
-    pg_user = 'root'
-    pg_pass = 'root'
-    pg_host = 'localhost'
-    pg_port = '5432'
-    pg_db = 'ny_taxi'
-    year = 2021
-    month = 1
-    chunksize = 100000
-    target_table = 'yellow_taxi_data'
-
+@click.command()
+@click.option("--pg-user", required=True, help="Postgres username")
+@click.option("--pg-pass", required=True, help="Postgres password")
+@click.option("--pg-host", required=True, help="Postgres host")
+@click.option("--pg-port", default=5432, help="Postgres port")
+@click.option("--pg-db", required=True, help="Postgres database name")
+@click.option("--year", default=2021, help="Year of dataset")
+@click.option("--month", default=1, help="Month of dataset")
+@click.option("--chunksize", default=100000, help="Number of rows per chunk")
+@click.option("--target-table", default="yellow_taxi_data", help="Target table name")
+def main(pg_user, pg_pass, pg_host, pg_port, pg_db, year, month, chunksize, target_table):
     engine = create_engine(
-        f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}')
+        f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}'
+    )
     url_prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
-
     url = f'{url_prefix}/yellow_tripdata_{year:04d}-{month:02d}.csv.gz'
 
     ingest_data(
